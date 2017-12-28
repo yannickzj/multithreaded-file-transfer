@@ -1,4 +1,12 @@
-# Assignment 3
+# Multi-threaded File Transfer
+
+## Introduction
+
+This is a course assignment that aims to implement a server to facilitate multiple file exchanges between clients.
+
+## Assignment requirements
+
+Please review the *requirements.pdf* for details.
 
 ## How to run the program
 
@@ -11,39 +19,29 @@ make clean
 make all
 ```
 
-+ Run the Server using the *server* script.
++ Run the Server using the *server.sh* script.
 ```
-./server
+./server.sh
 ```
 
 The Server will output the *port* file.
 
-+ Run the Client using the *client* script.
++ Run the Client using the *client.sh* script.
 ```
-./client <host> <port> <op-string> <file name> <send|recv size> <wait time>
+./client.sh <host> <port> <op-string> <file name> <send|recv size> <wait time>
 ```
 
 ## Build and test environment
 
-+ Build: 
++ Build and test: 
 ```
-ubuntu1604-002.student.cs.uwaterloo.ca
-ubuntu1604-006.student.cs.uwaterloo.ca
-ubuntu1604-008.student.cs.uwaterloo.ca
-```
-+ Test: 
-
-```
-ubuntu1604-002.student.cs.uwaterloo.ca
-ubuntu1604-006.student.cs.uwaterloo.ca
-ubuntu1604-008.student.cs.uwaterloo.ca
+ubuntu 16.04
 ```
 
 ## Design ideas
 
-All parts of the assignment have been completed. 
 
-I choose to use a multi-threaded design for the server. On the server side, the main thread maintains a hashmap to store all *key-Socket* pairs. The access and modification operations to the hashmap will be synchronized by a Semaphore with initial value of 1. When a client connects to the server, a new server thread will be created and the client will transfer the 9-byte *op-string* to the server thread. Then the server thread processes client's request based on the request type: 
+Multi-threaded design is chosen to implement the server. On the server side, the main thread maintains a hashmap to store all *key-Socket* pairs. The access and modification operations to the hashmap will be synchronized by a Semaphore with initial value of 1. When a client connects to the server, a new server thread will be created and the client will transfer the 9-byte *op-string* to the server thread. Then the server thread processes client's request based on the request type: 
 
 + download request
 
@@ -62,4 +60,4 @@ The server thread closes the ServerSocket in the main thread to stop receiving c
 
 + *make* version: *GNU Make 4.1*
 
-+ *Java* version: *openjdk "9-internal"*
++ *Java* version: *openjdk-9*
