@@ -2,11 +2,46 @@
 
 ## Introduction
 
-This is a course assignment that aims to implement a server to facilitate multiple file exchanges between clients.
+This project aims to implement a server to facilitate multiple file exchanges between clients using TCP.
 
-## Assignment requirements
+## Architecture
 
-Please review the *requirements.pdf* for details.
+### Server program
+
+The server program can handle an arbitrary number of concurrent connections and file exchanges, only limited by system configuration or memory. The server is started without any parameters and creates a TCP socket at an OS-assigned port. It prints out the assigned port number and stores it in a local file **port**, which is used when starting clients. The server listens on its main socket and accepts client connections as they arrive. Clients perform an upload or download operation, or instruct the server to terminate.
+
+Both upload and download operations specify a key that is used to match clients with each other, i.e., a client asking for downloading with a specific key receives the file that another client uploads using that key. Files are not stored at the server, but instead clients wait for a match and then data is forwarded directly from the uploader to the downloader. The server always matches a pair of uploader and downloader with the same key. For simplicity, we assume that only a single downloader matches an uploader, and an uploader never starts before its matched downloader.
+
+When the server receives the termination command from a client, it closes all waiting connections from unmatched clients and does not accept any further connections. However, it completes ongoing file exchanges and terminates only after all file exchanges are finished.
+
+### Communication
+
+The data stream sent from the client to the server adheres to the following format:
+
++ **command**: 1 ASCII character: **G** (get = download), **P** (put = upload), or **F** (finish = termination)
+
++ **key**: 8 ASCII characters (padded at the end by ‘\0’-characters, if necessary)
+
+In case of an upload, the above 9-byte control information is immediately followed by the binary data stream of the file. In case of download, the server responds with the binary data stream of the file. When a client has completed a file upload, it closes the connection. Then the server closes the download connection to the other client.
+
+### Client program
+
+The client takes up to 6 parameters and can be invoked in 3 different ways:
+
++ terminate server: `client <host> <port> F`
+
++ download: `client <host> <port> G<key> <file name> <recv size>`
+
++ upload: `client <host> <port> P<key> <file name> <send size> <wait time>`
+
+The client creates a TCP socket and connects to the server at `<host>` and `<port>`. It then transmits the command string given in the 3rd shell parameter to the server as described above, i.e., with padding. When transmitting an **F** command, the client still sends an empty key, i.e., 8 ‘\0’-characters.
+
+When requesting an upload or download, the client reads data from or stores data to, respectively, the file specified in the 4th parameter `<file name>`.
+
+The 5th parameter specifies the size of the buffer that is transmitted during each individual **write/send** or **read/recv** system call during the file transfer - except for the final data chunk that might be smaller.
+
+When uploading a file, the 6th parameter specifies a wait time in milliseconds between subsequent **write/send** system calls. Assume the wait time is always below 1 second, so the system call *usleep* can be used to implement the wait. This parameters allows for a simple form of rate control that is important to test the concurrency of the server.
+
 
 ## How to run the program
 
